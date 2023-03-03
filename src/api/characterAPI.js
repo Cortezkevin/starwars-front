@@ -1,13 +1,13 @@
 import { AXIOS_INTANCE } from './AxiosConfig';
 
-export const getAll = async ( ) => {
-    const { data } = await AXIOS_INTANCE.get("/film");
+export const getAll = async ( page ) => {
+    const { data } = await AXIOS_INTANCE.get(`/people?page=${page}`);
     return data;
 }
 
 export const getById = async ( id ) => {
     try {
-        const { data } = await AXIOS_INTANCE.get(`/film/${id}`);
+        const { data } = await AXIOS_INTANCE.get(`/people/${id}`);
         return {
             success: true,
             data
@@ -20,7 +20,7 @@ export const getById = async ( id ) => {
     }
 }
 
-export const getByManyIds = async ( id ) => {
-    const { data } = await AXIOS_INTANCE.get(`/film/getMany/${id}`);
+export const getByManyIds = async ( ids ) => {
+    const { data } = await AXIOS_INTANCE.get(`/people/getMany/${ids}`);
     return data;
 }
