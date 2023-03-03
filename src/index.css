@@ -23,3 +23,15 @@ button:disabled:hover {
 .bg-nav-color{
     background-color: #00000088;
 }
+
+.spin {
+    animation: 2s spin linear infinite;
+}
+
+@keyframes spin {
+    0%{
+        rotate: 0deg;
+    }100%{
+        rotate: 360deg;
+    }
+}

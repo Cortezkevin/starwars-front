@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { getById } from "../api/characterAPI";
 import { useParams } from "react-router-dom"
-import { getByManyIds } from "../api/filmsAPI";
+import { getByManyIds, getById } from "../api/API";
 import { Film } from "../components/Film";
 import { getIdFromUrl } from '../utils/getIdFromUrl';
 
@@ -9,18 +8,29 @@ export const PeopleDetailPage = () => {
 
 	const [ character, setCharacter ] = useState({});
   const [ films, setFilms ] = useState([]);
+  const [ homeworld, setHomeworld ] = useState([]);
+
   const [ loading, setLoading ] = useState(false);
   const [ loadingFilms, setLoadingFilms ] = useState([]);
+  const [ loadingHomeworld, setLoadingHomeworld ] = useState({});
+
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const { id } = useParams();
 
   useEffect(() => {
     const loadData = async () => {
-      const { success, data } = await getById( id );
-      setCharacter( data );
-      setLoading( false );  
-      
-      loadCharacterFilms( data.films );
+      const { success, data } = await getById( "people", id );
+      if(success){
+        setCharacter( data );
+        setLoading( false );  
+        
+        loadCharacterFilms( data.films );
+        loadCharacterHomeworld( data.homeworld );
+      }else{
+        setErrorMessage("Ocurrio un error");
+        setLoading( false );  
+      }
     }
     setLoading( true );
     loadData();
@@ -29,18 +39,25 @@ export const PeopleDetailPage = () => {
   const loadCharacterFilms = async ( urls = [] ) => {
     setLoadingFilms(true);
     const ids = urls.map( url => getIdFromUrl(url)); 
-    const films = await getByManyIds( ids );
-		console.log(films)
-    setFilms( films );
+    const { data } = await getByManyIds( "films", ids );
+    setFilms( data );
     setLoadingFilms(false);
+  }
+
+  const loadCharacterHomeworld = async ( url ) => {
+    setLoadingHomeworld(true);
+    const { data } = await getById( "planets", getIdFromUrl(url) );
+    setHomeworld( data );
+    setLoadingHomeworld(false);
   }
 
   return (
     <div className="text-sky-300 p-10 w-full flex flex-col gap-10" style={{ height: "calc(100vh - 80px)" }}>
       {
         loading
-        ? <div className="flex items-center justify-center w-full h-96"><p className="text-lg text-white">Loading...</p></div>
-        : character && <div className="flex flex-col gap-10">
+        ? <div className="flex items-center justify-center w-full h-96"><p className="text-lg text-white"><i className="spin text-4xl fa-sharp fa-solid fa-spinner"></i></p></div>
+        : character && errorMessage === null 
+          ? <div className="flex flex-col gap-10">
             <div className="flex flex-col gap-5">
               <div className="flex flex-row items-center gap-2">
                 <b className="text-white text-3xl font-medium">{ character.name }</b>
@@ -64,7 +81,7 @@ export const PeopleDetailPage = () => {
             <div>
               {
                 loadingFilms
-                ? <p className="text-lg text-white">Loading...</p>
+                ? <p className="text-lg text-white"><i className="spin text-4xl fa-sharp fa-solid fa-spinner"></i></p>
                 : films && <div className="flex gap-4 flex-wrap p-4 justify-center">
                   {
                     films.map( f => 
@@ -74,8 +91,24 @@ export const PeopleDetailPage = () => {
                 </div>
               }
             </div>
+            <p className="font-medium text-2xl text-100 text-white">Home World: </p>
+            <div>
+              {
+                loadingHomeworld
+                ? <p className="text-lg text-white"><i className="spin text-4xl fa-sharp fa-solid fa-spinner"></i></p>
+                : homeworld && <div className="flex gap-4 flex-col p-4 justify-center">
+                  <p className="text-2xl text-white">{ homeworld.name }</p>
+                  <div>
+                    <p>Climate: <b>{ homeworld.climate }</b></p>
+                    <p>Terrain: <b>{ homeworld.terrain }</b></p>
+                    <p>Population: <b>{ homeworld.population }</b></p>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
-      }      
+          : <div className="text-center text-2xl">{ errorMessage }</div>
+      }
     </div>
   )
 }
